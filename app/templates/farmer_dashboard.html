@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Farmer Dashboard - CropGuard AI{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fas fa-tachometer-alt text-success me-2"></i>Farmer Dashboard</h3>
+            <p class="text-muted mb-0">Welcome back, <strong>{{ current_user.username }}</strong></p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('farmer.detect_page') }}" class="btn btn-success"><i class="fas fa-camera me-2"></i>New Detection</a>
+            <a href="{{ url_for('farmer.download_report') }}" class="btn btn-outline-success"><i class="fas fa-file-pdf me-2"></i>Download Report</a>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card card border-0 shadow-sm p-3 text-center h-100">
+                <div class="stat-icon bg-success-subtle rounded-circle mx-auto mb-2"><i class="fas fa-search text-success fa-lg"></i></div>
+                <h3 class="fw-bold mb-0">{{ total }}</h3>
+                <small class="text-muted">Total Detections</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card card border-0 shadow-sm p-3 text-center h-100">
+                <div class="stat-icon bg-warning-subtle rounded-circle mx-auto mb-2"><i class="fas fa-seedling text-warning fa-lg"></i></div>
+                <h3 class="fw-bold mb-0">{{ crop_records|length }}</h3>
+                <small class="text-muted">Crop Records</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card card border-0 shadow-sm p-3 text-center h-100">
+                <div class="stat-icon bg-info-subtle rounded-circle mx-auto mb-2"><i class="fas fa-check-circle text-info fa-lg"></i></div>
+                <h3 class="fw-bold mb-0" id="healthy-count">—</h3>
+                <small class="text-muted">Healthy Scans</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card card border-0 shadow-sm p-3 text-center h-100">
+                <div class="stat-icon bg-danger-subtle rounded-circle mx-auto mb-2"><i class="fas fa-virus text-danger fa-lg"></i></div>
+                <h3 class="fw-bold mb-0" id="disease-count">—</h3>
+                <small class="text-muted">Diseases Found</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts + Recent Detections -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3 pb-0">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-chart-pie text-success me-2"></i>Disease Distribution</h6>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <canvas id="diseaseChart" style="max-height:260px"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-history text-success me-2"></i>Recent Detections</h6>
+                    <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#allHistoryModal">View All</button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr><th>Date</th><th>Disease</th><th>Crop</th><th>Confidence</th><th>Status</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for det in detections %}
+                                <tr>
+                                    <td><small>{{ det.detected_at.strftime('%b %d') }}</small></td>
+                                    <td class="fw-semibold small">{{ det.disease.name if det.disease else 'Unknown' }}</td>
+                                    <td><small class="text-muted">{{ det.disease.crop_type if det.disease else 'N/A' }}</small></td>
+                                    <td>
+                                        {% if det.confidence_score %}
+                                            <span class="badge {% if det.confidence_score > 0.8 %}bg-success{% elif det.confidence_score > 0.6 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                {{ "%.1f"|format(det.confidence_score * 100) }}%
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge bg-success-subtle text-success">{{ det.status }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crop Records -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-plant-wilt text-success me-2"></i>My Crop Records</h6>
+                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addCropModal">+ Add Crop</button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light"><tr><th>Crop</th><th>Area (acres)</th><th>Planted</th><th>Status</th></tr></thead>
+                            <tbody>
+                                {% for r in crop_records %}
+                                <tr>
+                                    <td class="fw-semibold">{{ r.crop_name }}</td>
+                                    <td>{{ r.area or '—' }}</td>
+                                    <td><small>{{ r.planting_date or '—' }}</small></td>
+                                    <td><span class="badge {% if r.health_status == 'healthy' %}bg-success{% else %}bg-danger{% endif %}">{{ r.health_status }}</span></td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" class="text-center text-muted py-4">No crop records yet. Add your first crop!</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3 pb-0">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-chart-bar text-success me-2"></i>Monthly Activity</h6>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <canvas id="monthlyChart" style="max-height:220px;width:100%"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Crop Modal -->
+<div class="modal fade" id="addCropModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-seedling me-2"></i>Add Crop Record</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label fw-semibold">Crop Name</label><input type="text" id="crop-name" class="form-control" required></div>
+                <div class="row g-3">
+                    <div class="col-6"><label class="form-label fw-semibold">Area (acres)</label><input type="number" id="crop-area" class="form-control" step="0.1"></div>
+                    <div class="col-6"><label class="form-label fw-semibold">Planting Date</label><input type="date" id="crop-date" class="form-control"></div>
+                </div>
+                <div class="mt-3"><label class="form-label fw-semibold">Health Status</label>
+                    <select id="crop-status" class="form-select">
+                        <option value="healthy">Healthy</option>
+                        <option value="at_risk">At Risk</option>
+                        <option value="diseased">Diseased</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="addCropRecord()">Save Record</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

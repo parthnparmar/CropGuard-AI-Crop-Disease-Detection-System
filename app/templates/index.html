@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}CropGuard AI - Smart Crop Disease Detection{% endblock %}
+{% block content %}
+
+<!-- Hero -->
+<section class="hero-section">
+    <div class="container text-center text-white py-5">
+        <div class="hero-content">
+            <span class="badge bg-light text-success mb-3 px-3 py-2 fs-6"><i class="fas fa-robot me-2"></i>AI-Powered Detection</span>
+            <h1 class="display-4 fw-bold mb-3">Protect Your Crops with <span class="text-warning">Intelligent AI</span></h1>
+            <p class="lead mb-4 opacity-90">Upload a leaf image and get instant disease diagnosis, confidence scores, and expert treatment recommendations.</p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('farmer.detect_page') }}" class="btn btn-warning btn-lg px-4 fw-semibold"><i class="fas fa-camera me-2"></i>Detect Disease Now</a>
+                    <a href="{{ url_for('farmer.dashboard') }}" class="btn btn-outline-light btn-lg px-4">My Dashboard</a>
+                {% else %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-warning btn-lg px-4 fw-semibold"><i class="fas fa-seedling me-2"></i>Get Started Free</a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg px-4">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Bar -->
+<section class="bg-success text-white py-3">
+    <div class="container">
+        <div class="row text-center g-3">
+            <div class="col-6 col-md-3"><div class="stat-item"><h4 class="fw-bold mb-0">10+</h4><small>Diseases Detected</small></div></div>
+            <div class="col-6 col-md-3"><div class="stat-item"><h4 class="fw-bold mb-0">95%</h4><small>Accuracy Rate</small></div></div>
+            <div class="col-6 col-md-3"><div class="stat-item"><h4 class="fw-bold mb-0">&lt;3s</h4><small>Detection Speed</small></div></div>
+            <div class="col-6 col-md-3"><div class="stat-item"><h4 class="fw-bold mb-0">8+</h4><small>Crop Types</small></div></div>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-2">How It Works</h2>
+        <p class="text-center text-muted mb-5">Three simple steps to protect your crops</p>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card text-center p-4 h-100">
+                    <div class="feature-icon bg-success-subtle mb-3"><i class="fas fa-upload text-success fa-2x"></i></div>
+                    <h5 class="fw-bold">1. Upload Image</h5>
+                    <p class="text-muted">Take a clear photo of the affected crop leaf and upload it to our system.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center p-4 h-100">
+                    <div class="feature-icon bg-warning-subtle mb-3"><i class="fas fa-brain text-warning fa-2x"></i></div>
+                    <h5 class="fw-bold">2. AI Analysis</h5>
+                    <p class="text-muted">Our CNN model analyzes the image and identifies diseases with confidence scores.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card text-center p-4 h-100">
+                    <div class="feature-icon bg-info-subtle mb-3"><i class="fas fa-prescription-bottle-medical text-info fa-2x"></i></div>
+                    <h5 class="fw-bold">3. Get Treatment</h5>
+                    <p class="text-muted">Receive detailed organic and chemical treatment recommendations instantly.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Supported Crops -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-2">Supported Crops</h2>
+        <p class="text-center text-muted mb-4">Our AI detects diseases across multiple crop varieties</p>
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+            {% for crop in [('🍅','Tomato'),('🥔','Potato'),('🌽','Corn'),('🌾','Rice'),('🌿','Wheat'),('🍎','Apple'),('🍇','Grape'),('🍊','Citrus')] %}
+            <div class="crop-badge text-center p-3 bg-white rounded-3 shadow-sm" style="min-width:90px">
+                <div class="fs-2">{{ crop[0] }}</div>
+                <small class="fw-semibold text-muted">{{ crop[1] }}</small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="py-5 bg-success text-white text-center">
+    <div class="container">
+        <h2 class="fw-bold mb-3">Start Protecting Your Crops Today</h2>
+        <p class="lead mb-4 opacity-90">Join thousands of farmers using AI to detect and treat crop diseases early.</p>
+        {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('auth.register') }}" class="btn btn-warning btn-lg px-5 fw-semibold">
+            <i class="fas fa-user-plus me-2"></i>Register Free
+        </a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Chatbot -->
+<div id="chatbot-widget">
+    <div id="chatbot-box" class="d-none">
+        <div class="chatbot-header bg-success text-white p-3 d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-robot me-2"></i>Crop Assistant</span>
+            <button onclick="toggleChat()" class="btn btn-sm btn-outline-light">✕</button>
+        </div>
+        <div id="chat-messages" class="p-3" style="height:250px;overflow-y:auto;background:#f8f9fa"></div>
+        <div class="p-2 d-flex gap-2 bg-white border-top">
+            <input id="chat-input" type="text" class="form-control form-control-sm" placeholder="Ask about diseases...">
+            <button id="chat-mic-btn" class="btn btn-outline-success mic-btn" title="Speak your query">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button onclick="sendChat()" class="btn btn-success btn-sm px-3">Send</button>
+        </div>
+    </div>
+    <button onclick="toggleChat()" class="btn btn-success rounded-circle shadow" style="width:56px;height:56px">
+        <i class="fas fa-robot fa-lg"></i>
+    </button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleChat() {
+    document.getElementById('chatbot-box').classList.toggle('d-none');
+}
+async function sendChat() {
+    const input = document.getElementById('chat-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+    appendChat('You', msg, 'user');
+    input.value = '';
+    try {
+        const res = await fetch('/api/chatbot', {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
+        if (!res.ok) throw new Error('Server error');
+        const data = await res.json();
+        appendChat('CropGuard', data.response || 'Sorry, I could not understand that.', 'bot');
+    } catch(e) {
+        appendChat('CropGuard', 'Sorry, something went wrong. Please try again.', 'bot');
+    }
+}
+function appendChat(sender, text, type) {
+    const div = document.getElementById('chat-messages');
+    const cls = type === 'user' ? 'text-end' : 'text-start';
+    const bg = type === 'user' ? 'bg-success text-white' : 'bg-white border';
+    div.innerHTML += `<div class="${cls} mb-2"><span class="badge bg-secondary mb-1">${sender}</span><div class="${bg} rounded p-2 d-inline-block text-wrap" style="max-width:80%;font-size:0.85rem">${text}</div></div>`;
+    div.scrollTop = div.scrollHeight;
+}
+document.getElementById('chat-input').addEventListener('keypress', e => { if(e.key==='Enter') sendChat(); });
+</script>
+{% endblock %}

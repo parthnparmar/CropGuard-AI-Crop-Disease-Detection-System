@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Detect Disease - CropGuard AI{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="fw-bold mb-1"><i class="fas fa-microscope text-success me-2"></i>Disease Detection</h2>
+            <p class="text-muted mb-4">Upload a clear leaf image for AI-powered disease analysis.</p>
+
+            <!-- Upload Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div id="drop-zone" class="drop-zone text-center p-5 rounded-3 border-2 border-dashed cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-success fa-3x mb-3"></i>
+                        <h5 class="fw-semibold">Drag & Drop or Click to Upload</h5>
+                        <p class="text-muted small mb-3">Supports JPG, PNG, JPEG (max 16MB)</p>
+                        <input type="file" id="image-input" accept=".jpg,.jpeg,.png" class="d-none">
+                        <button onclick="document.getElementById('image-input').click()" class="btn btn-outline-success px-4">Choose File</button>
+                    </div>
+
+                    <div id="preview-section" class="d-none mt-4 text-center">
+                        <img id="preview-img" src="" alt="Preview" class="img-thumbnail rounded-3 shadow-sm" style="max-height:280px;object-fit:cover">
+                        <p id="file-name" class="text-muted small mt-2"></p>
+                        <div class="d-flex gap-2 justify-content-center mt-3">
+                            <button id="analyze-btn" class="btn btn-success px-5 fw-semibold" onclick="analyzeImage()">
+                                <i class="fas fa-search me-2"></i>Analyze Disease
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="resetUpload()">Clear</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="d-none text-center py-4">
+                <div class="spinner-border text-success mb-3" style="width:3rem;height:3rem"></div>
+                <p class="fw-semibold text-muted">Analyzing your crop image with AI...</p>
+            </div>
+
+            <!-- Result Card -->
+            <div id="result-card" class="d-none">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-success text-white py-3">
+                        <h5 class="mb-0 fw-bold"><i class="fas fa-chart-bar me-2"></i>Detection Result</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row align-items-center mb-4">
+                            <div class="col-md-6">
+                                <div class="result-disease-name mb-2">
+                                    <span class="badge bg-danger-subtle text-danger px-3 py-2 fs-6 fw-semibold" id="disease-badge"></span>
+                                </div>
+                                <h4 class="fw-bold" id="result-disease"></h4>
+                                <p class="text-muted" id="result-crop"></p>
+                                <div class="confidence-bar-wrap">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small class="fw-semibold">Confidence Score</small>
+                                        <small id="confidence-text" class="fw-bold text-success"></small>
+                                    </div>
+                                    <div class="progress" style="height:10px">
+                                        <div id="confidence-bar" class="progress-bar bg-success" role="progressbar"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <img id="result-img" src="" class="img-fluid rounded-3 shadow-sm" style="max-height:180px;object-fit:cover;width:100%">
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="info-block p-3 rounded-3 bg-danger-subtle">
+                                    <h6 class="fw-bold text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Symptoms</h6>
+                                    <p id="result-symptoms" class="mb-0 small"></p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-block p-3 rounded-3 bg-warning-subtle">
+                                    <h6 class="fw-bold text-warning"><i class="fas fa-virus me-2"></i>Causes</h6>
+                                    <p id="result-causes" class="mb-0 small"></p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-block p-3 rounded-3 bg-success-subtle">
+                                    <h6 class="fw-bold text-success"><i class="fas fa-leaf me-2"></i>Organic Treatment</h6>
+                                    <p id="result-organic" class="mb-0 small"></p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-block p-3 rounded-3 bg-info-subtle">
+                                    <h6 class="fw-bold text-info"><i class="fas fa-flask me-2"></i>Chemical Treatment</h6>
+                                    <p id="result-chemical" class="mb-0 small"></p>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="info-block p-3 rounded-3 bg-primary-subtle">
+                                    <h6 class="fw-bold text-primary"><i class="fas fa-shield-alt me-2"></i>Preventive Measures</h6>
+                                    <p id="result-preventive" class="mb-0 small"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 d-flex gap-2 flex-wrap">
+                            <button id="tts-btn" class="btn btn-outline-primary" onclick="speakResult(window._lastResult)">
+                                <i class="fas fa-volume-up me-2"></i>Read Aloud
+                            </button>
+                            <a href="{{ url_for('farmer.dashboard') }}" class="btn btn-outline-success"><i class="fas fa-chart-line me-2"></i>View Dashboard</a>
+                            <button onclick="resetUpload()" class="btn btn-success"><i class="fas fa-redo me-2"></i>Detect Another</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/detect.js') }}"></script>
+{% endblock %}
