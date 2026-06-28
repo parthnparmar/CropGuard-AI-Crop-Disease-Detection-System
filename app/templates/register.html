@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Register - CropGuard AI{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-seedling text-success fa-3x mb-3"></i>
+                        <h3 class="fw-bold">Create Account</h3>
+                        <p class="text-muted">Join CropGuard AI for free</p>
+                    </div>
+                    <form method="POST" action="{{ url_for('auth.register') }}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Username</label>
+                                <input type="text" name="username" class="form-control" required minlength="3">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Phone</label>
+                                <input type="tel" name="phone" class="form-control">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Email Address</label>
+                                <input type="email" name="email" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Password</label>
+                                <input type="password" name="password" id="pwd" class="form-control" required minlength="6">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Confirm Password</label>
+                                <input type="password" id="pwd2" class="form-control" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Farm Address</label>
+                                <textarea name="address" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div id="pwd-error" class="text-danger small mt-2 d-none">Passwords do not match.</div>
+                        <button type="submit" class="btn btn-success w-100 py-2 fw-semibold mt-3">
+                            <i class="fas fa-user-plus me-2"></i>Register
+                        </button>
+                    </form>
+                    <hr class="my-4">
+                    <p class="text-center text-muted mb-0">Already have an account? <a href="{{ url_for('auth.login') }}" class="text-success fw-semibold">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+    const p1 = document.getElementById('pwd').value;
+    const p2 = document.getElementById('pwd2').value;
+    const err = document.getElementById('pwd-error');
+    if (p1 !== p2) { e.preventDefault(); err.classList.remove('d-none'); }
+    else err.classList.add('d-none');
+});
+</script>
+{% endblock %}

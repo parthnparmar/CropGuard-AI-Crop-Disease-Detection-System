@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Soil Analysis — CropGuard AI{% endblock %}
+
+{% block extra_css %}
+<style>
+  .soil-card { border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+  .health-badge { font-size: 1.1rem; padding: .4em .9em; border-radius: 20px; }
+  .health-Excellent { background:#d1fae5; color:#065f46; }
+  .health-Good      { background:#d1fae5; color:#166534; }
+  .health-Fair      { background:#fef9c3; color:#854d0e; }
+  .health-Poor      { background:#fee2e2; color:#991b1b; }
+  .result-section   { border-left: 4px solid #198754; padding-left: 12px; margin-bottom: 14px; }
+  .history-row td   { vertical-align: middle; }
+  .input-range-hint { font-size: .75rem; color: #6c757d; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+
+    <!-- Input Form -->
+    <div class="col-lg-5 mb-4">
+      <div class="card soil-card p-4">
+        <h4 class="fw-bold text-success mb-1"><i class="fas fa-flask me-2"></i>Soil Analysis</h4>
+        <p class="text-muted small mb-4">Enter your soil test values to get AI recommendations.</p>
+
+        <form id="soilForm">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Soil pH</label>
+            <input type="number" id="ph" class="form-control" placeholder="e.g. 6.5" min="0" max="14" step="0.1" required>
+            <div class="input-range-hint">Range: 0 – 14 &nbsp;|&nbsp; Ideal: 6.0 – 7.5</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nitrogen (N) <span class="text-muted fw-normal">kg/ha</span></label>
+            <input type="number" id="nitrogen" class="form-control" placeholder="e.g. 200" min="0" max="1000" required>
+            <div class="input-range-hint">Range: 0 – 1000 &nbsp;|&nbsp; Ideal: 140 – 280</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Phosphorus (P) <span class="text-muted fw-normal">kg/ha</span></label>
+            <input type="number" id="phosphorus" class="form-control" placeholder="e.g. 30" min="0" max="200" required>
+            <div class="input-range-hint">Range: 0 – 200 &nbsp;|&nbsp; Ideal: 25 – 50</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Potassium (K) <span class="text-muted fw-normal">kg/ha</span></label>
+            <input type="number" id="potassium" class="form-control" placeholder="e.g. 180" min="0" max="800" required>
+            <div class="input-range-hint">Range: 0 – 800 &nbsp;|&nbsp; Ideal: 100 – 200</div>
+          </div>
+
+          <button type="submit" class="btn btn-success w-100 fw-semibold" id="analyzeBtn">
+            <i class="fas fa-microscope me-2"></i>Analyze Soil
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Result Panel -->
+    <div class="col-lg-7 mb-4">
+      <div class="card soil-card p-4 h-100" id="resultCard" style="display:none!important;">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h5 class="fw-bold mb-0"><i class="fas fa-chart-pie me-2 text-success"></i>Analysis Result</h5>
+          <span id="healthBadge" class="health-badge fw-semibold"></span>
+        </div>
+
+        <div class="result-section">
+          <div class="fw-semibold text-success mb-1"><i class="fas fa-seedling me-1"></i>Suitable Crops</div>
+          <div id="resCrops" class="text-dark"></div>
+        </div>
+        <div class="result-section">
+          <div class="fw-semibold text-success mb-1"><i class="fas fa-vial me-1"></i>Fertilizer Recommendation</div>
+          <div id="resFertilizer" class="text-dark"></div>
+        </div>
+        <div class="result-section">
+          <div class="fw-semibold text-success mb-1"><i class="fas fa-lightbulb me-1"></i>Soil Health Advice</div>
+          <div id="resAdvice" class="text-dark"></div>
+        </div>
+
+        <!-- Read Aloud -->
+        <button class="btn btn-outline-success btn-sm mt-2" onclick="readResult()">
+          <i class="fas fa-volume-up me-1"></i>Read Aloud
+        </button>
+      </div>
+
+      <!-- Error box -->
+      <div id="errorBox" class="alert alert-danger mt-3" style="display:none;"></div>
+    </div>
+
+  </div>
+
+  <!-- History -->
+  {% if analyses %}
+  <div class="row mt-2">
+    <div class="col-12">
+      <div class="card soil-card p-4">
+        <h5 class="fw-bold text-success mb-3"><i class="fas fa-history me-2"></i>Recent Soil Analyses</h5>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-success">
+              <tr>
+                <th>Date</th><th>pH</th><th>N</th><th>P</th><th>K</th>
+                <th>Health</th><th>Suitable Crops</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in analyses %}
+              <tr class="history-row">
+                <td class="text-muted small">{{ a.analyzed_at.strftime('%d %b %Y') }}</td>
+                <td>{{ a.ph }}</td>
+                <td>{{ a.nitrogen }}</td>
+                <td>{{ a.phosphorus }}</td>
+                <td>{{ a.potassium }}</td>
+                <td><span class="badge health-{{ a.soil_health }}">{{ a.soil_health }}</span></td>
+                <td class="small">{{ a.suitable_crops }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let lastResult = {};
+
+document.getElementById('soilForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analyzing...';
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('resultCard').style.display = 'none';
+
+  const payload = {
+    ph: parseFloat(document.getElementById('ph').value),
+    nitrogen: parseFloat(document.getElementById('nitrogen').value),
+    phosphorus: parseFloat(document.getElementById('phosphorus').value),
+    potassium: parseFloat(document.getElementById('potassium').value)
+  };
+
+  try {
+    const res = await fetch('/api/soil-analyze', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      lastResult = data;
+      document.getElementById('resCrops').textContent = data.suitable_crops;
+      document.getElementById('resFertilizer').innerHTML = data.fertilizer_recommendation.split(' | ').map(f => `• ${f}`).join('<br>');
+      document.getElementById('resAdvice').textContent = data.advice;
+
+      const badge = document.getElementById('healthBadge');
+      badge.textContent = '🌱 ' + data.soil_health;
+      badge.className = 'health-badge fw-semibold health-' + data.soil_health;
+
+      document.getElementById('resultCard').style.removeProperty('display');
+    } else {
+      showError(data.message);
+    }
+  } catch(err) {
+    showError('Server error. Please try again.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-microscope me-2"></i>Analyze Soil';
+  }
+});
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = msg;
+  box.style.display = 'block';
+}
+
+function readResult() {
+  if (!lastResult.soil_health) return;
+  const text = `Soil health is ${lastResult.soil_health}. Suitable crops: ${lastResult.suitable_crops}. Fertilizer: ${lastResult.fertilizer_recommendation.replace(/\|/g,',')}. Advice: ${lastResult.advice}`;
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = localStorage.getItem('selectedLang') || 'en-IN';
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utt);
+}
+</script>
+{% endblock %}
