@@ -1,0 +1,16 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Flask-JWT-Extended
+Flask-Bcrypt
+Flask-CORS
+Flask-Migrate
+PyMySQL
+cryptography
+Pillow
+numpy
+reportlab
+python-dotenv
+Werkzeug
+tensorflow
+scipy
